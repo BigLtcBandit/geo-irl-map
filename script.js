@@ -23,7 +23,11 @@ class IRLMapOverlay {
         // Customization parameters from URL, initialized with defaults
         this.showWeather = true; 
         this.rotateDateTime = true;
-        this.speedUnit = 'kmh'; 
+        this.speedUnit = 'kmh';
+        this.powerSave = false;
+        this.dataSaver = false;
+        this.mapEnabled = true;
+        this.trackingState = 'high';
         
         // Speed calculation settings
         this.speedHistory = [];
@@ -34,9 +38,9 @@ class IRLMapOverlay {
         this.maxReasonableSpeed = 60;
         
         // Location update settings
-        this.locationUpdateInterval = 30000;
+        this.locationUpdateInterval = this.dataSaver ? 120000 : 60000;
         this.locationUpdateDistance = 1000;
-        this.weatherUpdateInterval = 300000; // 5 minutes
+        this.weatherUpdateInterval = this.dataSaver ? 900000 : 600000; // 15 or 10 minutes
         this.stationaryDelay = 3000; // 3 seconds before showing weather
         this.displayRotationTime = 30000; // 30 seconds
         
@@ -73,6 +77,15 @@ class IRLMapOverlay {
         }
         if (urlParams.has('time')) { // 'time' refers to the date/time rotation
             this.rotateDateTime = urlParams.get('time').toLowerCase() === 'true';
+        }
+        if (urlParams.has('powersave')) {
+            this.powerSave = urlParams.get('powersave').toLowerCase() === 'true';
+        }
+        if (urlParams.has('datasaver')) {
+            this.dataSaver = urlParams.get('datasaver').toLowerCase() === 'true';
+        }
+        if (urlParams.has('map')) {
+            this.mapEnabled = urlParams.get('map').toLowerCase() === 'true';
         }
         
         // Speed unit
@@ -120,6 +133,10 @@ class IRLMapOverlay {
     }
 
     initMap() {
+        if (!this.mapEnabled) {
+            document.getElementById('map').style.display = 'none';
+            return;
+        }
         this.map = L.map('map', {
             zoomControl: false,
             attributionControl: false,
@@ -227,23 +244,29 @@ class IRLMapOverlay {
         }
     }
 
-    startTracking() {
+    startTracking(options) {
         if (!navigator.geolocation) {
             console.error('Geolocation is not supported by this browser.');
             this.showError('Geolocation not supported');
             return;
         }
 
-        const options = {
-            enableHighAccuracy: true,
-            timeout: 10000,
-            maximumAge: 1000
+        if (this.watchId) {
+            navigator.geolocation.clearWatch(this.watchId);
+        }
+
+        const defaultOptions = {
+            enableHighAccuracy: !this.powerSave,
+            timeout: this.powerSave ? 20000 : 10000,
+            maximumAge: this.powerSave ? 5000 : 1000
         };
+
+        const finalOptions = { ...defaultOptions, ...options };
 
         this.watchId = navigator.geolocation.watchPosition(
             (position) => this.updatePosition(position),
             (error) => this.handleError(error),
-            options
+            finalOptions
         );
     }
 
@@ -323,6 +346,17 @@ class IRLMapOverlay {
         this.updateMap(latitude, longitude);
         this.updateSpeedDisplay();
         this.updateDirectionDisplay();
+
+        if (this.powerSave) {
+            constnewState = this.currentSpeed > 2 ? 'high' : 'low';
+            if (newState !== this.trackingState) {
+                this.trackingState = newState;
+                const options = this.trackingState === 'high'
+                    ? { enableHighAccuracy: true, maximumAge: 1000 }
+                    : { enableHighAccuracy: false, maximumAge: 10000 };
+                this.startTracking(options);
+            }
+        }
     }
 
     async handleStationaryState(latitude, longitude, timestamp) {
@@ -352,6 +386,7 @@ class IRLMapOverlay {
     }
 
     async updateWeather(latitude, longitude, timestamp) {
+        if (this.dataSaver) return;
         try {
             const response = await fetch(
                 `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}¤t_weather=true&temperature_unit=celsius`
@@ -410,6 +445,11 @@ class IRLMapOverlay {
     }
 
     async updateLocationName(latitude, longitude, timestamp) {
+        if (this.dataSaver) {
+            this.currentLocationName = 'Data Saver Mode';
+            this.updateLocationDisplay();
+            return;
+        }
         const shouldUpdate = 
             !this.currentLocationName || 
             (timestamp - this.lastLocationUpdate) > this.locationUpdateInterval ||
@@ -637,6 +677,7 @@ class IRLMapOverlay {
     }
 
     updateMap(latitude, longitude) {
+        if (!this.mapEnabled) return;
         const currentLatLng = [latitude, longitude];
         
         if (this.currentMarker) {

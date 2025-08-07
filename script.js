@@ -7,6 +7,7 @@ class IRLMapOverlay {
         this.lastPosition = null;
         this.lastTimestamp = null;
         this.currentSpeed = 0;
+        this.currentBearing = 0;
         this.watchId = null;
         this.isFirstLocation = true;
         this.lastLocationUpdate = 0;
@@ -308,10 +309,20 @@ class IRLMapOverlay {
 
         this.currentSpeed = this.filterSpeed(calculatedSpeed);
         
+        if (this.currentSpeed > this.minSpeedThreshold) {
+            this.currentBearing = this.calculateBearing(
+                this.lastPosition.latitude,
+                this.lastPosition.longitude,
+                latitude,
+                longitude
+            );
+        }
+
         await this.handleStationaryState(latitude, longitude, timestamp);
         
         this.updateMap(latitude, longitude);
         this.updateSpeedDisplay();
+        this.updateDirectionDisplay();
     }
 
     async handleStationaryState(latitude, longitude, timestamp) {
@@ -536,6 +547,34 @@ class IRLMapOverlay {
 
     toRadians(degrees) {
         return degrees * (Math.PI / 180);
+    }
+
+    calculateBearing(lat1, lon1, lat2, lon2) {
+        const y = Math.sin(this.toRadians(lon2 - lon1)) * Math.cos(this.toRadians(lat2));
+        const x = Math.cos(this.toRadians(lat1)) * Math.sin(this.toRadians(lat2)) -
+                  Math.sin(this.toRadians(lat1)) * Math.cos(this.toRadians(lat2)) * Math.cos(this.toRadians(lon2 - lon1));
+        const bearing = (this.toRadians(360) + Math.atan2(y, x)) % this.toRadians(360);
+        return (bearing * 180) / Math.PI;
+    }
+
+    bearingToCardinal(bearing) {
+        const directions = ['N', 'NE', 'E', 'SE', 'S', 'SW', 'W', 'NW'];
+        const index = Math.round(bearing / 45) % 8;
+        return directions[index];
+    }
+
+    updateDirectionDisplay() {
+        const directionDisplay = document.getElementById('direction-display');
+        if (this.currentSpeed > this.minSpeedThreshold) {
+            directionDisplay.classList.add('visible');
+            const directionArrow = document.getElementById('direction-arrow');
+            const directionAbbr = document.getElementById('direction-abbr');
+
+            directionArrow.style.transform = `rotate(${this.currentBearing}deg)`;
+            directionAbbr.textContent = this.bearingToCardinal(this.currentBearing);
+        } else {
+            directionDisplay.classList.remove('visible');
+        }
     }
 
     updateSpeedDisplay() {

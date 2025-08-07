@@ -234,6 +234,48 @@ body {
     }
 }
 
+#direction-display {
+    position: absolute;
+    top: 12px;
+    left: 110px; /* Position it next to the speed display */
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
+    color: #ffffff;
+    padding: 10px 14px;
+    border-radius: 12px;
+    z-index: 1000;
+    text-align: center;
+    min-width: 70px;
+    border: 1px solid rgba(83, 252, 24, 0.4);
+    box-shadow:
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(83, 252, 24, 0.1);
+    backdrop-filter: blur(10px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    opacity: 0; /* Initially hidden */
+    transition: opacity 0.5s ease-in-out;
+}
+
+#direction-display.visible {
+    opacity: 1;
+}
+
+#direction-arrow {
+    font-size: 22px;
+    line-height: 1;
+    color: #53fc18;
+    transition: transform 0.5s ease-in-out;
+}
+
+#direction-abbr {
+    font-size: 18px;
+    font-weight: 700;
+    color: #ffffff;
+    line-height: 1;
+}
+
 /* Custom map controls styling */
 .leaflet-control-container {
     display: none;

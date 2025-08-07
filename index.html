@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>IRL Stream Overlay</title>
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <div id="overlay-container">
+        <div id="map-container">
+            <div id="map"></div>
+            <div id="speed-display">
+                <div id="speed-value">0.0</div>
+                <div id="speed-unit">km/h</div>
+            </div>
+            <div id="location-display">
+                <div id="location-name">Getting location...</div>
+            </div>
+        </div>
+        <div class="status-indicator"></div>
+    </div>
+
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="script.js"></script>
+</body>
+</html>

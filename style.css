@@ -1,0 +1,287 @@
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+}
+
+body {
+    background: transparent;
+    font-family: 'Inter', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    overflow: hidden;
+}
+
+#overlay-container {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    width: 320px;
+    height: 260px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.95) 0%, rgba(20, 20, 20, 0.9) 100%);
+    border-radius: 16px;
+    border: 2px solid #53fc18;
+    backdrop-filter: blur(15px);
+    box-shadow: 
+        0 8px 32px rgba(0, 0, 0, 0.4),
+        0 0 20px rgba(83, 252, 24, 0.2),
+        inset 0 1px 0 rgba(255, 255, 255, 0.1);
+    overflow: hidden;
+    animation: slideIn 0.5s ease-out;
+}
+
+@keyframes slideIn {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+#map-container {
+    position: relative;
+    width: 100%;
+    height: 100%;
+}
+
+#map {
+    width: 100%;
+    height: 100%;
+    border-radius: 14px;
+    z-index: 1;
+}
+
+#speed-display {
+    position: absolute;
+    top: 12px;
+    left: 12px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
+    color: #53fc18;
+    padding: 10px 14px;
+    border-radius: 12px;
+    z-index: 1000;
+    text-align: center;
+    min-width: 85px;
+    border: 1px solid rgba(83, 252, 24, 0.4);
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 10px rgba(83, 252, 24, 0.1);
+    backdrop-filter: blur(10px);
+}
+
+#speed-value {
+    font-size: 26px;
+    font-weight: 700;
+    line-height: 1;
+    text-shadow: 0 0 10px rgba(83, 252, 24, 0.5);
+    letter-spacing: -0.5px;
+}
+
+/* Weather display styling */
+#speed-value.weather-display {
+    font-size: 20px;
+    line-height: 1.2;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+#speed-unit {
+    font-size: 11px;
+    color: #ffffff;
+    opacity: 0.9;
+    margin-top: 3px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+}
+
+#location-display {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    z-index: 1000;
+    font-size: 12px;
+    line-height: 1.4;
+    border: 1px solid rgba(83, 252, 24, 0.3);
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(83, 252, 24, 0.1);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.5s ease-in-out;
+}
+
+#location-name {
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.5s ease-in-out;
+}
+
+/* DateTime display styling */
+#location-name.datetime-display {
+    color: #ffffff !important;
+    font-weight: 700 !important;
+    font-size: 12px;
+    line-height: 1.2;
+    text-align: center;
+    animation: dateTimeFadeIn 0.5s ease-in-out;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+@keyframes dateTimeFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(5px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Make sure location display can handle single line */
+#location-display {
+    position: absolute;
+    bottom: 12px;
+    left: 12px;
+    right: 12px;
+    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
+    color: #ffffff;
+    padding: 8px 12px;
+    border-radius: 10px;
+    z-index: 1000;
+    font-size: 12px;
+    line-height: 1.4;
+    border: 1px solid rgba(83, 252, 24, 0.3);
+    box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.3),
+        0 0 8px rgba(83, 252, 24, 0.1);
+    backdrop-filter: blur(10px);
+    text-align: center;
+    font-weight: 500;
+    transition: all 0.5s ease-in-out;
+    min-height: 32px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#location-name {
+    color: #ffffff;
+    font-weight: 600;
+    transition: all 0.5s ease-in-out;
+    width: 100%;
+}
+
+/* Kick.com inspired speed color coding */
+.speed-stationary { 
+    color: #888888;
+    text-shadow: none;
+}
+
+.speed-slow { 
+    color: #53fc18;
+    text-shadow: 0 0 10px rgba(83, 252, 24, 0.5);
+}
+
+.speed-medium { 
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+}
+
+.speed-fast { 
+    color: #ffff00;
+    text-shadow: 0 0 10px rgba(255, 255, 0, 0.5);
+}
+
+.speed-very-fast { 
+    color: #ff4444;
+    text-shadow: 0 0 10px rgba(255, 68, 68, 0.5);
+}
+
+/* Animation for speed changes */
+#speed-value {
+    transition: all 0.3s ease;
+}
+
+#speed-value.speed-update {
+    transform: scale(1.05);
+    filter: brightness(1.2);
+}
+
+/* Weather transition animation */
+#speed-value.weather-display {
+    animation: weatherFadeIn 0.5s ease-in-out;
+}
+
+@keyframes weatherFadeIn {
+    from {
+        opacity: 0;
+        transform: scale(0.9);
+    }
+    to {
+        opacity: 1;
+        transform: scale(1);
+    }
+}
+
+/* Custom map controls styling */
+.leaflet-control-container {
+    display: none;
+}
+
+/* Marker pulse animation */
+@keyframes markerPulse {
+    0% {
+        box-shadow: 0 0 0 0 rgba(83, 252, 24, 0.7);
+    }
+    70% {
+        box-shadow: 0 0 0 10px rgba(83, 252, 24, 0);
+    }
+    100% {
+        box-shadow: 0 0 0 0 rgba(83, 252, 24, 0);
+    }
+}
+
+.pulse-marker {
+    animation: markerPulse 2s infinite;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+    #overlay-container {
+        width: 280px;
+        height: 220px;
+        top: 10px;
+        right: 10px;
+    }
+    
+    #speed-value {
+        font-size: 22px;
+    }
+    
+    #speed-value.weather-display {
+        font-size: 18px;
+    }
+    
+    #location-display {
+        font-size: 11px;
+    }
+}
+
+/* Kick.com style accent elements */
+#overlay-container::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+}

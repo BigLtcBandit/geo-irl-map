@@ -27,6 +27,9 @@ For example: `https://kickis.fun?weather=false&time=false&unit=mph`
 -   `weather`: Set to `false` to disable the weather display when stationary. (Default: `true`)
 -   `time`: Set to `false` to disable the rotation between location name and date/time. (Default: `true`)
 -   `unit`: Set to `mph` to display speed in miles per hour. (Default: `kmh`)
+-   `powersave`: Set to `true` to reduce battery consumption by lowering GPS accuracy and update frequency. (Default: `false`)
+-   `datasaver`: Set to `true` to reduce data usage by disabling location name and weather lookups. (Default: `false`)
+-   `map`: Set to `false` to disable the map display entirely, which significantly reduces data usage. (Default: `true`)
 -   `top`, `bottom`, `left`, `right`: Position the overlay on the screen. For example, `top=10px&left=10px`.
 -   `width`, `height`: Set the size of the overlay. For example, `width=350px&height=280px`.
 

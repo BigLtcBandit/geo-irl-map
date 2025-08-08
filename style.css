@@ -120,8 +120,10 @@ body {
 
 #location-name {
     color: #ffffff;
-    font-weight: 600;
+    font-weight: 700;
+    font-size: 24px;
     transition: all 0.5s ease-in-out;
+    width: 100%;
 }
 
 /* DateTime display styling */
@@ -175,12 +177,6 @@ body {
     justify-content: center;
 }
 
-#location-name {
-    color: #ffffff;
-    font-weight: 600;
-    transition: all 0.5s ease-in-out;
-    width: 100%;
-}
 
 /* Kick.com inspired speed color coding */
 .speed-stationary { 
@@ -253,20 +249,12 @@ body {
     display: flex;
     align-items: center;
     justify-content: center;
-    gap: 8px;
     opacity: 0; /* Initially hidden */
     transition: opacity 0.5s ease-in-out;
 }
 
 #direction-display.visible {
     opacity: 1;
-}
-
-#direction-arrow {
-    font-size: 22px;
-    line-height: 1;
-    color: #53fc18;
-    transition: transform 0.5s ease-in-out;
 }
 
 #direction-abbr {

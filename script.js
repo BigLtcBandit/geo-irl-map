@@ -21,12 +21,10 @@ class IRLMapOverlay {
         this.currentTimezone = null;
         
         // Customization parameters from URL, initialized with defaults
-        this.showWeather = true; 
         this.rotateDateTime = true;
         this.speedUnit = 'kmh';
         this.powerSave = false;
         this.dataSaver = false;
-        this.mapEnabled = true;
         this.trackingState = 'high';
         
         // Speed calculation settings
@@ -45,7 +43,6 @@ class IRLMapOverlay {
         this.displayRotationTime = 30000; // 30 seconds
         
         this.parseUrlParameters(); // Parse URL parameters first
-        this.applyOverlayStyles(); // Apply dynamic styles based on parsed parameters
 
         // FIX: Immediately set the initial speed unit display based on parsed parameters
         const speedUnitElement = document.getElementById('speed-unit');
@@ -72,9 +69,6 @@ class IRLMapOverlay {
         const urlParams = new URLSearchParams(window.location.search);
         
         // Boolean flags
-        if (urlParams.has('weather')) {
-            this.showWeather = urlParams.get('weather').toLowerCase() === 'true';
-        }
         if (urlParams.has('time')) { // 'time' refers to the date/time rotation
             this.rotateDateTime = urlParams.get('time').toLowerCase() === 'true';
         }
@@ -83,9 +77,6 @@ class IRLMapOverlay {
         }
         if (urlParams.has('datasaver')) {
             this.dataSaver = urlParams.get('datasaver').toLowerCase() === 'true';
-        }
-        if (urlParams.has('map')) {
-            this.mapEnabled = urlParams.get('map').toLowerCase() === 'true';
         }
         
         // Speed unit
@@ -99,44 +90,7 @@ class IRLMapOverlay {
         }
     }
 
-    // Function to apply dynamic styles from URL parameters
-    applyOverlayStyles() {
-        const overlayContainer = document.getElementById('overlay-container');
-        if (overlayContainer) {
-            const urlParams = new URLSearchParams(window.location.search);
-
-            // Positioning (prioritize top/left if both specified, otherwise respect individual settings)
-            if (urlParams.has('top')) {
-                overlayContainer.style.top = urlParams.get('top');
-                overlayContainer.style.bottom = 'auto'; // Clear conflicting property
-            } else if (urlParams.has('bottom')) {
-                overlayContainer.style.bottom = urlParams.get('bottom');
-                overlayContainer.style.top = 'auto'; // Clear conflicting property
-            }
-
-            if (urlParams.has('right')) {
-                overlayContainer.style.right = urlParams.get('right');
-                overlayContainer.style.left = 'auto'; // Clear conflicting property
-            } else if (urlParams.has('left')) {
-                overlayContainer.style.left = urlParams.get('left');
-                overlayContainer.style.right = 'auto'; // Clear conflicting property
-            }
-
-            // Size
-            if (urlParams.has('width')) {
-                overlayContainer.style.width = urlParams.get('width');
-            }
-            if (urlParams.has('height')) {
-                overlayContainer.style.height = urlParams.get('height');
-            }
-        }
-    }
-
     initMap() {
-        if (!this.mapEnabled) {
-            document.getElementById('map').style.display = 'none';
-            return;
-        }
         this.map = L.map('map', {
             zoomControl: false,
             attributionControl: false,
@@ -371,12 +325,12 @@ class IRLMapOverlay {
             this.stationaryStartTime = null;
         }
 
-        // Only update weather if showWeather is true and conditions are met
-        if (this.showWeather && this.isStationary && this.stationaryStartTime && 
+        // Only update weather if conditions are met
+        if (this.isStationary && this.stationaryStartTime &&
             (timestamp - this.stationaryStartTime) > this.stationaryDelay) {
-            
-            const shouldUpdateWeather = 
-                !this.currentWeather || 
+
+            const shouldUpdateWeather =
+                !this.currentWeather ||
                 (timestamp - this.lastWeatherUpdate) > this.weatherUpdateInterval;
 
             if (shouldUpdateWeather) {
@@ -636,9 +590,9 @@ class IRLMapOverlay {
         const speedElement = document.getElementById('speed-value');
         const speedUnit = document.getElementById('speed-unit');
         
-        // Check if we should show weather instead of speed (only if showWeather is enabled)
-        const shouldShowWeather = this.showWeather && displaySpeed === 0 && this.isStationary && 
-                                 this.stationaryStartTime && 
+        // Check if we should show weather instead of speed
+        const shouldShowWeather = displaySpeed === 0 && this.isStationary &&
+                                 this.stationaryStartTime &&
                                  (Date.now() - this.stationaryStartTime) > this.stationaryDelay &&
                                  this.currentWeather;
 

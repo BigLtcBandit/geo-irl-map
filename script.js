@@ -12,16 +12,9 @@ class IRLMapOverlay {
         this.isFirstLocation = true;
         this.lastLocationUpdate = 0;
         this.currentLocationName = '';
-        this.lastWeatherUpdate = 0;
-        this.currentWeather = null;
-        this.isStationary = false;
-        this.stationaryStartTime = null;
         this.displayRotationInterval = null;
-        this.showingDateTime = false; 
-        this.currentTimezone = null;
         
         // Customization parameters from URL, initialized with defaults
-        this.rotateDateTime = true;
         this.speedUnit = 'kmh';
         this.powerSave = false;
         this.dataSaver = false;
@@ -38,9 +31,7 @@ class IRLMapOverlay {
         // Location update settings
         this.locationUpdateInterval = this.dataSaver ? 120000 : 60000;
         this.locationUpdateDistance = 1000;
-        this.weatherUpdateInterval = this.dataSaver ? 900000 : 600000; // 15 or 10 minutes
-        this.stationaryDelay = 3000; // 3 seconds before showing weather
-        this.displayRotationTime = 30000; // 30 seconds
+        this.displayRotationTime = 15000; // 15 seconds
         
         this.parseUrlParameters(); // Parse URL parameters first
 
@@ -54,14 +45,7 @@ class IRLMapOverlay {
         this.startTracking();
         this.setupEventListeners();
         
-        // Conditional start of display rotation based on parsed parameter
-        if (this.rotateDateTime) {
-            this.startDisplayRotation();
-        } else {
-            // If rotation is disabled, ensure location is displayed and doesn't switch
-            this.showingDateTime = false; 
-            this.updateLocationDisplay(); 
-        }
+        this.startDisplayRotation();
     }
 
     // Function to parse URL query parameters
@@ -69,9 +53,6 @@ class IRLMapOverlay {
         const urlParams = new URLSearchParams(window.location.search);
         
         // Boolean flags
-        if (urlParams.has('time')) { // 'time' refers to the date/time rotation
-            this.rotateDateTime = urlParams.get('time').toLowerCase() === 'true';
-        }
         if (urlParams.has('powersave')) {
             this.powerSave = urlParams.get('powersave').toLowerCase() === 'true';
         }
@@ -109,93 +90,23 @@ class IRLMapOverlay {
     }
 
     startDisplayRotation() {
-        // Only start rotation if rotateDateTime is true
-        if (this.rotateDateTime) {
-            this.displayRotationInterval = setInterval(() => {
-                this.toggleLocationDisplay();
-            }, this.displayRotationTime);
-        }
+        this.displayRotationInterval = setInterval(() => {
+            this.toggleLocationDisplay();
+        }, this.displayRotationTime);
     }
 
     toggleLocationDisplay() {
-        // Only toggle if rotation is enabled
-        if (!this.rotateDateTime) {
-            this.showingDateTime = false; // Force location if rotation is off
-            this.updateLocationDisplay();
-            return;
+        const locationDisplay = document.getElementById('location-display');
+        if (locationDisplay.style.display === 'none') {
+            locationDisplay.style.display = 'flex';
+        } else {
+            locationDisplay.style.display = 'none';
         }
-        this.showingDateTime = !this.showingDateTime;
-        this.updateLocationDisplay();
     }
 
     updateLocationDisplay() {
         const locationElement = document.getElementById('location-name');
-        
-        // Show date/time only if rotateDateTime is true and it's the current state
-        if (this.showingDateTime && this.rotateDateTime) {
-            const dateTimeString = this.getCurrentDateTime();
-            locationElement.innerHTML = dateTimeString;
-            locationElement.classList.add('datetime-display');
-        } else {
-            locationElement.innerHTML = this.currentLocationName || 'Getting location...';
-            locationElement.classList.remove('datetime-display');
-        }
-    }
-
-    getCurrentDateTime() {
-        const now = new Date();
-        const options = {
-            timeZone: this.currentTimezone || undefined,
-            weekday: 'short',
-            year: 'numeric',
-            month: 'short',
-            day: 'numeric',
-            hour: '2-digit',
-            minute: '2-digit',
-            hour12: false
-        };
-        try {
-            const formatter = new Intl.DateTimeFormat('en-US', options);
-            const parts = formatter.formatToParts(now);
-            const weekday = parts.find(p => p.type === 'weekday')?.value;
-            const day = parts.find(p => p.type === 'day')?.value;
-            const month = parts.find(p => p.type === 'month')?.value;
-            const year = parts.find(p => p.type === 'year')?.value;
-            const hour = parts.find(p => p.type === 'hour')?.value;
-            const minute = parts.find(p => p.type === 'minute')?.value;
-            return `${weekday}, ${month} ${day}, ${year} • ${hour}:${minute}`;
-        } catch (error) {
-            console.error('DateTime formatting error:', error);
-            const dateStr = now.toLocaleDateString('en-US', { 
-                weekday: 'short', 
-                month: 'short', 
-                day: 'numeric', 
-                year: 'numeric' 
-            });
-            const timeStr = now.toLocaleTimeString([], {
-                hour: '2-digit', 
-                minute:'2-digit', 
-                hour12: false
-            });
-            return `${dateStr} • ${timeStr}`;
-        }
-    }
-
-    async getTimezone(latitude, longitude) {
-        try {
-            const response = await fetch(
-                `https://api.bigdatacloud.net/data/timezone-by-location?latitude=${latitude}&longitude=${longitude}&key=bdc_schematic`
-            );
-            if (response.ok) {
-                const data = await response.json();
-                if (data && data.ianaTimeZone) {
-                    this.currentTimezone = data.ianaTimeZone;
-                    console.log('Detected timezone:', this.currentTimezone);
-                }
-            }
-        } catch (error) {
-            console.error('Timezone detection failed:', error);
-        }
+        locationElement.innerHTML = this.currentLocationName || 'Getting location...';
     }
 
     startTracking(options) {
@@ -231,11 +142,6 @@ class IRLMapOverlay {
         document.getElementById('overlay-container').classList.remove('error-state');
 
         await this.updateLocationName(latitude, longitude, timestamp);
-
-        if (!this.currentTimezone || (this.lastPosition && 
-            this.calculateDistance(this.lastPosition.latitude, this.lastPosition.longitude, latitude, longitude) > 50000)) {
-            await this.getTimezone(latitude, longitude);
-        }
 
         if (accuracy > this.accuracyThreshold && !this.isFirstLocation) {
             console.log(`Poor accuracy (${accuracy}m), skipping update`);
@@ -295,8 +201,6 @@ class IRLMapOverlay {
             );
         }
 
-        await this.handleStationaryState(latitude, longitude, timestamp);
-        
         this.updateMap(latitude, longitude);
         this.updateSpeedDisplay();
         this.updateDirectionDisplay();
@@ -311,91 +215,6 @@ class IRLMapOverlay {
                 this.startTracking(options);
             }
         }
-    }
-
-    async handleStationaryState(latitude, longitude, timestamp) {
-        const speedKmh = Math.max(0, this.currentSpeed * 3.6);
-        const isCurrentlyStationary = speedKmh < 1;
-
-        if (isCurrentlyStationary && !this.isStationary) {
-            this.stationaryStartTime = timestamp;
-            this.isStationary = true;
-        } else if (!isCurrentlyStationary && this.isStationary) {
-            this.isStationary = false;
-            this.stationaryStartTime = null;
-        }
-
-        // Only update weather if conditions are met
-        if (this.isStationary && this.stationaryStartTime &&
-            (timestamp - this.stationaryStartTime) > this.stationaryDelay) {
-
-            const shouldUpdateWeather =
-                !this.currentWeather ||
-                (timestamp - this.lastWeatherUpdate) > this.weatherUpdateInterval;
-
-            if (shouldUpdateWeather) {
-                await this.updateWeather(latitude, longitude, timestamp);
-            }
-        }
-    }
-
-    async updateWeather(latitude, longitude, timestamp) {
-        if (this.dataSaver) return;
-        try {
-            const response = await fetch(
-                `https://api.open-meteo.com/v1/forecast?latitude=${latitude}&longitude=${longitude}¤t_weather=true&temperature_unit=celsius`
-            );
-            
-            if (!response.ok) {
-                throw new Error('Weather service unavailable');
-            }
-            
-            const data = await response.json();
-            
-            if (data && data.current_weather) {
-                const weather = data.current_weather;
-                this.currentWeather = {
-                    temperature: Math.round(weather.temperature),
-                    weatherCode: weather.weathercode,
-                    windSpeed: Math.round(weather.windspeed)
-                };
-                this.lastWeatherUpdate = timestamp;
-                console.log('Weather updated:', this.currentWeather);
-            }
-        } catch (error) {
-            console.error('Weather update failed:', error);
-            this.currentWeather = null;
-        }
-    }
-
-    getWeatherIcon(weatherCode) {
-        const weatherIcons = {
-            0: '☀️',   // Clear sky
-            1: '🌤️',   // Mainly clear
-            2: '⛅',   // Partly cloudy
-            3: '☁️',   // Overcast
-            45: '🌫️',  // Fog
-            48: '🌫️',  // Depositing rime fog
-            51: '🌦️',  // Light drizzle
-            53: '🌦️',  // Moderate drizzle
-            55: '🌦️',  // Dense drizzle
-            61: '🌧️',  // Slight rain
-            63: '🌧️',  // Moderate rain
-            65: '🌧️',  // Heavy rain
-            71: '🌨️',  // Slight snow
-            73: '🌨️',  // Moderate snow
-            75: '🌨️',  // Heavy snow
-            77: '❄️',  // Snow grains
-            80: '🌦️',  // Slight rain showers
-            81: '🌧️',  // Moderate rain showers
-            82: '🌧️',  // Violent rain showers
-            85: '🌨️',  // Slight snow showers
-            86: '🌨️',  // Heavy snow showers
-            95: '⛈️',  // Thunderstorm
-            96: '⛈️',  // Thunderstorm with hail
-            99: '⛈️'   // Thunderstorm with heavy hail
-        };
-        return weatherIcons[weatherCode] || '🌡️';
     }
 
     async updateLocationName(latitude, longitude, timestamp) {
@@ -420,16 +239,11 @@ class IRLMapOverlay {
                 this.currentLocationName = locationName;
                 this.lastLocationUpdate = timestamp;
                 
-                // Update display only if currently showing location (not datetime or if datetime rotation is off)
-                if (!this.showingDateTime || !this.rotateDateTime) {
-                    this.updateLocationDisplay();
-                }
+                this.updateLocationDisplay();
             } catch (error) {
                 console.error('Reverse geocoding failed:', error);
                 this.currentLocationName = 'Location unavailable';
-                if (!this.showingDateTime || !this.rotateDateTime) {
-                    this.updateLocationDisplay();
-                }
+                this.updateLocationDisplay();
             }
         }
     }
@@ -561,10 +375,7 @@ class IRLMapOverlay {
         const directionDisplay = document.getElementById('direction-display');
         if (this.currentSpeed > this.minSpeedThreshold) {
             directionDisplay.classList.add('visible');
-            const directionArrow = document.getElementById('direction-arrow');
             const directionAbbr = document.getElementById('direction-abbr');
-
-            directionArrow.style.transform = `rotate(${this.currentBearing}deg)`;
             directionAbbr.textContent = this.bearingToCardinal(this.currentBearing);
         } else {
             directionDisplay.classList.remove('visible');
@@ -590,43 +401,29 @@ class IRLMapOverlay {
         const speedElement = document.getElementById('speed-value');
         const speedUnit = document.getElementById('speed-unit');
         
-        // Check if we should show weather instead of speed
-        const shouldShowWeather = displaySpeed === 0 && this.isStationary &&
-                                 this.stationaryStartTime &&
-                                 (Date.now() - this.stationaryStartTime) > this.stationaryDelay &&
-                                 this.currentWeather;
+        // Show speed
+        speedElement.textContent = displaySpeed.toFixed(1);
+        speedUnit.textContent = unitText; // Use dynamic unit
 
-        if (shouldShowWeather) {
-            // Show weather
-            const weatherIcon = this.getWeatherIcon(this.currentWeather.weatherCode);
-            speedElement.innerHTML = `${weatherIcon}<br><span style="font-size: 18px;">${this.currentWeather.temperature}°</span>`;
-            speedUnit.textContent = 'Weather';
-            speedElement.className = 'speed-value weather-display';
+        const lastSpeed = parseFloat(speedElement.dataset.lastSpeed || 0);
+        if (Math.abs(displaySpeed - lastSpeed) > (this.speedUnit === 'mph' ? 1.5 : 2)) { // Adjust threshold for mph
+            speedElement.classList.add('speed-update');
+            setTimeout(() => speedElement.classList.remove('speed-update'), 200);
+        }
+        speedElement.dataset.lastSpeed = displaySpeed;
+
+        // Kick.com style color coding (thresholds adjusted for mph)
+        speedElement.className = 'speed-value';
+        if (displaySpeed === 0) {
+            speedElement.classList.add('speed-stationary');
+        } else if (displaySpeed < (this.speedUnit === 'mph' ? 6 : 10)) {
+            speedElement.classList.add('speed-slow');
+        } else if (displaySpeed < (this.speedUnit === 'mph' ? 18 : 30)) {
+            speedElement.classList.add('speed-medium');
+        } else if (displaySpeed < (this.speedUnit === 'mph' ? 37 : 60)) {
+            speedElement.classList.add('speed-fast');
         } else {
-            // Show speed
-            speedElement.textContent = displaySpeed.toFixed(1);
-            speedUnit.textContent = unitText; // Use dynamic unit
-            
-            const lastSpeed = parseFloat(speedElement.dataset.lastSpeed || 0);
-            if (Math.abs(displaySpeed - lastSpeed) > (this.speedUnit === 'mph' ? 1.5 : 2)) { // Adjust threshold for mph
-                speedElement.classList.add('speed-update');
-                setTimeout(() => speedElement.classList.remove('speed-update'), 200);
-            }
-            speedElement.dataset.lastSpeed = displaySpeed;
-            
-            // Kick.com style color coding (thresholds adjusted for mph)
-            speedElement.className = 'speed-value';
-            if (displaySpeed === 0) {
-                speedElement.classList.add('speed-stationary');
-            } else if (displaySpeed < (this.speedUnit === 'mph' ? 6 : 10)) { 
-                speedElement.classList.add('speed-slow');
-            } else if (displaySpeed < (this.speedUnit === 'mph' ? 18 : 30)) {
-                speedElement.classList.add('speed-medium');
-            } else if (displaySpeed < (this.speedUnit === 'mph' ? 37 : 60)) {
-                speedElement.classList.add('speed-fast');
-            } else {
-                speedElement.classList.add('speed-very-fast');
-            }
+            speedElement.classList.add('speed-very-fast');
         }
     }
 
@@ -639,9 +436,9 @@ class IRLMapOverlay {
         } else {
             const customIcon = L.divIcon({
                 className: 'pulse-marker',
-                html: '<div style="background: linear-gradient(135deg, #53fc18 0%, #00ff88 100%); width: 14px; height: 14px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(83, 252, 24, 0.5);"></div>',
-                iconSize: [18, 18],
-                iconAnchor: [9, 9]
+                html: '<div style="background: linear-gradient(135deg, #53fc18 0%, #00ff88 100%); width: 28px; height: 28px; border-radius: 50%; border: 2px solid white; box-shadow: 0 0 10px rgba(83, 252, 24, 0.5);"></div>',
+                iconSize: [32, 32],
+                iconAnchor: [16, 16]
             });
             
             this.currentMarker = L.marker(currentLatLng, { icon: customIcon }).addTo(this.map);

@@ -78,14 +78,6 @@ body {
     letter-spacing: -0.5px;
 }
 
-/* Weather display styling */
-#speed-value.weather-display {
-    font-size: 20px;
-    line-height: 1.2;
-    color: #00ff88;
-    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
-}
-
 #speed-unit {
     font-size: 11px;
     color: #ffffff;
@@ -121,60 +113,9 @@ body {
 #location-name {
     color: #ffffff;
     font-weight: 700;
-    font-size: 24px;
+    font-size: 18px;
     transition: all 0.5s ease-in-out;
     width: 100%;
-}
-
-/* DateTime display styling */
-#location-name.datetime-display {
-    color: #ffffff !important;
-    font-weight: 700 !important;
-    font-size: 12px;
-    line-height: 1.2;
-    text-align: center;
-    animation: dateTimeFadeIn 0.5s ease-in-out;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
-}
-
-@keyframes dateTimeFadeIn {
-    from {
-        opacity: 0;
-        transform: translateY(5px);
-    }
-    to {
-        opacity: 1;
-        transform: translateY(0);
-    }
-}
-
-/* Make sure location display can handle single line */
-#location-display {
-    position: absolute;
-    bottom: 12px;
-    left: 12px;
-    right: 12px;
-    background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
-    color: #ffffff;
-    padding: 8px 12px;
-    border-radius: 10px;
-    z-index: 1000;
-    font-size: 12px;
-    line-height: 1.4;
-    border: 1px solid rgba(83, 252, 24, 0.3);
-    box-shadow: 
-        0 4px 16px rgba(0, 0, 0, 0.3),
-        0 0 8px rgba(83, 252, 24, 0.1);
-    backdrop-filter: blur(10px);
-    text-align: center;
-    font-weight: 500;
-    transition: all 0.5s ease-in-out;
-    min-height: 32px;
-    display: flex;
-    align-items: center;
-    justify-content: center;
 }
 
 
@@ -214,26 +155,11 @@ body {
     filter: brightness(1.2);
 }
 
-/* Weather transition animation */
-#speed-value.weather-display {
-    animation: weatherFadeIn 0.5s ease-in-out;
-}
-
-@keyframes weatherFadeIn {
-    from {
-        opacity: 0;
-        transform: scale(0.9);
-    }
-    to {
-        opacity: 1;
-        transform: scale(1);
-    }
-}
 
 #direction-display {
     position: absolute;
     top: 12px;
-    left: 110px; /* Position it next to the speed display */
+    right: 12px;
     background: linear-gradient(135deg, rgba(0, 0, 0, 0.9) 0%, rgba(20, 20, 20, 0.85) 100%);
     color: #ffffff;
     padding: 10px 14px;

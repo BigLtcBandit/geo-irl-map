@@ -19,6 +19,8 @@ class IRLMapOverlay {
         this.powerSave = false;
         this.dataSaver = false;
         this.trackingState = 'high';
+        this.zoomLevel = 17; // Default zoom level
+        this.mapEnabled = true; // Default map state
         
         // Speed calculation settings
         this.speedHistory = [];
@@ -69,6 +71,14 @@ class IRLMapOverlay {
                 this.speedUnit = 'kmh'; // Default or invalid value
             }
         }
+
+        // Add zoom level parameter
+        if (urlParams.has('zoom')) {
+            const zoom = parseInt(urlParams.get('zoom'), 10);
+            if (!isNaN(zoom) && zoom >= 10 && zoom <= 19) {
+                this.zoomLevel = zoom;
+            }
+        }
     }
 
     initMap() {
@@ -81,7 +91,7 @@ class IRLMapOverlay {
             boxZoom: false,
             keyboard: false,
             tap: false
-        }).setView([40.7128, -74.0060], 15);
+        }).setView([40.7128, -74.0060], this.zoomLevel);
 
         L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
             maxZoom: 19,
@@ -444,7 +454,7 @@ class IRLMapOverlay {
         }
 
         if (this.isFirstLocation) {
-            this.map.setView(currentLatLng, 15);
+            this.map.setView(currentLatLng, this.zoomLevel);
             this.isFirstLocation = false;
         } else {
             this.map.panTo(currentLatLng);
@@ -513,7 +523,7 @@ class IRLMapOverlay {
 
     recenter() {
         if (this.lastPosition) {
-            this.map.setView([this.lastPosition.latitude, this.lastPosition.longitude], 15);
+            this.map.setView([this.lastPosition.latitude, this.lastPosition.longitude], this.zoomLevel);
         }
     }
 
